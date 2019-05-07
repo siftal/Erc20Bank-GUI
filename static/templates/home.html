@@ -1,0 +1,449 @@
+<!-- Bootstrap NavBar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark d-lg-none">
+  <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <a class="navbar-brand" href="#">
+    <img src="images/ether-bank-logo.png" width="30" height="30" class="d-inline-block align-top" alt="">
+  </a>
+  <div class="collapse navbar-collapse" id="navbarNavDropdown">
+    <ul class="navbar-nav">
+      <li class="nav-item active">
+        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Help</a><i class="fas fa-question"></i>
+      </li>
+      
+    </ul>
+  </div>
+</nav><!-- NavBar END -->
+
+
+<!-- Bootstrap row -->
+<div class="row someBlock pl-lg-5" id="body-row">
+    <!-- Sidebar -->
+    <div id="sidebar-container" class="sidebar-collapsed d-none d-lg-block col-lg-3 fixed-top"><!-- d-* hiddens the Sidebar in smaller devices. Its itens can be kept on the Navbar 'Menu' -->
+        <!-- Bootstrap List Group -->
+        <ul class="list-group">
+          <a href="" data-toggle="collapse" aria-expanded="false" class="bg-light list-group-item list-group-item-action flex-column align-items-start collapsed pl-3 pt-2">
+            <img src="images/ether-bank-logo-black.png" class="d-inline-block align-top" width="25" height="25" alt="EtherBank-logo">
+          </a>
+            <!-- Menu with submenu -->
+            <a href="" data-toggle="collapse" aria-expanded="false" class="bg-dark list-group-item list-group-item-action flex-column align-items-start collapsed">
+                <div class="d-flex w-100 justify-content-start align-items-center">
+                    <span class="fa fa-home fa-fw mr-3"></span> 
+                    <span class="menu-collapsed d-none">Home</span>
+                    <!-- <span class="submenu-icon ml-auto d-none"></span> -->
+                </div>
+            </a>
+            <!-- Submenu content -->
+<!--             <div id='submenu1' class="collapse sidebar-submenu d-none">
+                <a href="#" class="list-group-item list-group-item-action bg-dark text-white">
+                    <span class="menu-collapsed d-none">Charts</span>
+                </a>
+            </div> -->
+           
+
+            <a href="#" class="bg-dark list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-start align-items-center">
+                    <span class="fa fa-question fa-fw mr-3"></span>
+                    <span class="menu-collapsed d-none">Help</span>
+                </div>
+            </a>
+            <a href="" data-toggle="sidebar-colapse" class="bg-dark list-group-item list-group-item-action d-flex align-items-center">
+                <div class="d-flex w-100 justify-content-start align-items-center">
+                    <span id="collapse-icon" class="fas fa-sm mr-3"></span>
+                    <span id="collapse-text" class="menu-collapsed d-none">Collapse</span>
+                </div>
+            </a>  
+        </ul><!-- List Group END-->
+    </div><!-- sidebar-container END -->
+
+    <!-- MAIN -->
+    <!-- <div class="col row"> -->
+
+      <div class="col-lg-9 col-12 pl-lg-5">
+
+        <div class="container-fluid pt-4 pb-4" ng-show='currentPage.getLoan || currentPage.confirm'>
+          <div class="row">
+            <h3>Get Loan</h3>
+          </div>
+          <div class="divider-line row"></div>
+          <ul class="list-unstyled multi-steps pt-5">
+            <li ng-class='{"is-active": currentPage.getLoan}'>Loan Details</li>
+            <li ng-class='{"is-active": currentPage.confirm}'>Confirmation</li>
+          </ul>
+        </div>
+
+
+        <form ng-show='currentPage.getLoan'>
+          <div class="row mb-3">
+            <div class="col-md-6 col-12 input-group">
+              <label for="collaterallInput" class="input-group">Collateral</label>
+              <input type="number" class="form-control" step=".0001" placeholder="Amount of Collateral to Lock" id="collaterallInput" ng-model='collateralAmount' ng-change='getLoanLimitation()'>
+              <div class="input-group-append" style="display: inline-table;">
+                <span class="input-group-text">ETH</span>
+              </div>
+              <label for="collaterallInput" class="input-group mt-1" style="direction: rtl;">Your Account Balance: {{ethAccountBalance}} ETH</label>
+            </div>
+            <div class="col-md-6 col-12 input-group">
+              <label for="etdInput" class="input-group">Loan</label>
+              <input type="number" class="form-control" step=".01" min=".01" placeholder="Amount of Loan to Receive" id="etdInput" ng-model='loanAmount' ng-change='getLoanLimitation()'>
+              <div class="input-group-append">
+                <span class="input-group-text">ETD</span>
+              </div>
+              <label for="etdInput" class="input-group mt-1" style="direction: rtl;" ng-show='!isNan(maxLoan)'>Max Loan with Collateralization Ratio 2x: {{maxLoan}} ETD</label>
+              <label for="etdInput" class="input-group mt-1" style="direction: rtl;" ng-show='isNan(maxLoan)'>Max Loan with Collateralization Ratio 2x: -- ETD</label>
+            </div>
+          </div>
+
+          <div class="row container-fluid" ng-show='showAlert'>
+            <div class="alert alert-danger col-md-6 col-12" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+                </button>
+                <i class="fas fa-exclamation-triangle"></i>
+                <span class="ml-1">{{alertMessage}}</span>
+            </div>
+          </div>
+          <div class="row container-fluid">
+            <div class="col-md-6 col-12 pt-4 pb-4 left-description-box">
+              <div class="row  mb-3">
+                <small class="float-left col-md-8">Liquidation Price (ETH/USD)<i class="far fa-question-circle ml-1" data-toggle="tooltip" data-placement="top" title="The price of Ether at wich your loan will be put to liquidation and your collateral ETH will be sold in an auction."></i></small>
+                <small class="float-right col-md-4 text-right" ng-show='!isNan(liquidationPrice)'>{{liquidationPrice}} USD</small>
+                <small class="float-right col-md-4 text-right" ng-show='isNan(liquidationPrice)'>-- USD</small>
+              </div>
+              <div class="row mb-1">
+                <small class="float-left col-md-8">Current ETH Price</small>
+                <small class="float-right col-md-4 text-right">{{etherPrice}} USD</small>
+              </div>
+            </div>
+            <div class="divider-line col-12 d-md-none"></div>
+            <div class="col-md-6 pt-4 pb-4 right-description-box">
+              <div class="row mb-3">
+                <small class="float-left col-md-8">Collateralization Ratio<i class="far fa-question-circle ml-1" data-toggle="tooltip" data-placement="top" title="The ratio according to your inputs."></i></small>
+                <small class="float-right col-md-4 text-right" ng-show='!isNan(currentRatio)'>{{currentRatio}} %</small>
+                <small class="float-right col-md-4 text-right" ng-show='isNan(currentRatio)'>-- %</small>
+              </div>
+              <div class="row">
+                <small class="float-left col-md-8">Minimum Ratio</small>
+                <small class="float-right col-md-4 text-right">{{minRatio*100}} %</small>
+              </div>
+            </div>
+            
+          </div>
+
+          <div class="divider-line col-12 d-md-none"></div>
+
+          <div class="row pt-4 container-fluid">
+            <div class="col-6"><button type="button" class="btn btn-outline-success" ng-click='loanOrderSubmission()' ng-disabled='showAlert || deactiveGetLoan'>Get a Loan</button></div>
+          </div>
+
+        </form>
+
+        <div ng-show='currentPage.confirm'>
+          <div class="row container-fluid justify-content-center justify-content-md-start">
+            <h3 class="mb-4">Loan Details</h3>
+            <div class="divider-line col-12 d-md-none"></div>
+          </div>
+          <div class="row container-fluid">
+            <div class="col-md-6 col-12 pt-4 pb-4 left-description-box">
+              <div class="row">
+                <small class="float-left col-md-8 col-6">Collateral Amount:</small>
+                <small class="float-right col-md-4 col-6 text-right">{{collateralAmount}} ETH</small>
+              </div>
+            </div>
+            <div class="col-md-6 pt-4 pb-4 right-description-box">
+              <div class="row">
+                <small class="float-left col-md-8 col-6">Loan Amount:</small>
+                <small class="float-right col-md-4 col-6 text-right">{{loanAmount}} ETD</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="container-fluid row">
+            
+           <div class="divider-line col-12 d-md-none"></div>
+          </div>
+
+          <div class="row container-fluid pt-5 pb-3 pl-4">
+            <div class="custom-control custom-checkbox">
+              <input type="checkbox" class="custom-control-input" id="customCheck1" ng-model='checkTerms'>
+              <label class="custom-control-label" for="customCheck1">I have read and accept the Terms and service</label>
+            </div>
+          </div>
+
+          <div class="row container-fluid">
+            <div class="col-12">
+              <button type="button" class="btn btn-outline-warning" ng-click='backPage()'><i class="fas fa-arrow-left mr-3"></i></i>Back</button>
+              <button type="button" class="btn btn-outline-success ml-3" ng-click='loanOrderConfirmation()' ng-disabled='!checkTerms'><i class="fas fa-check mr-3"></i>Finalize</button>
+            </div>
+          </div>
+
+          <div class="container-fluid row pt-5">
+             <div class="divider-line col-12 d-md-none"></div>
+          </div>
+
+        </div>
+        <div ng-show='currentPage.dashboard'>
+          <div class="row container-fluid pt-4">
+            <h3>Loan ID: #{{selectedLoan.loanId}}</h3>
+          </div>
+          <div class="divider-line col-12 d-md-none mt-3"></div>
+          <div class="row container-fluid">
+            <div class="divider-line col-12"></div>
+            <div class="col-md-9 pt-3">
+              <div class="row pb-2">
+                <small class="float-left col-8">Collateralization Ratio<i class="far fa-question-circle ml-1" data-toggle="tooltip" data-placement="top" title="Tooltip on top"></i></small>
+                <small class="float-right col-4 text-right">{{selectedLoan.collateralRatio}} %</small>
+              </div>
+              <div class="row pb-2">
+                <small class="float-left col-8">Minimum Ratio</small>
+                <small class="float-right col-4 text-right">{{minRatio*100}} %</small>
+              </div>
+              <div class="row pb-2">
+                <small class="float-left col-8">Liquidation Price (ETH/USD)<i class="far fa-question-circle ml-1" data-toggle="tooltip" data-placement="top" title="Tooltip on top"></i></small>
+                <small class="float-right col-4 text-right">{{selectedLoan.liquidationPrice}}</small>
+              </div>
+              <div class="row pb-3">
+                <small class="float-left col-8">Loan State</small>
+                <small class="float-right col-4 text-right text-primary" ng-class='{activeLoan:selectedLoan.loanState=="Active", underliquidation:selectedLoan.loanState=="Under Liquidation"}'>{{selectedLoan.loanState}}</small>
+              </div>
+            </div>
+            
+          </div>
+
+          <div class="divider-line col-12"></div>
+
+          <div class="row container-fluid pb-4 pt-4">
+            <div class="col-md-9 col-12 pt-4">
+
+              <div class="row pb-5">
+                <div class="col-sm-4 col-6 pt-2">
+                  <small class="float-left">Remaining Debt<i class="far fa-question-circle ml-1" data-toggle="tooltip" data-placement="top" title="Tooltip on top"></i></small>
+                </div>
+                <div class="col-sm-4 col-6 pt-2">
+                  <small class="col text-right text-sm-left float-right">{{selectedLoan.remainingDebt}}<small class="ml-1">ETD</small></small>
+                </div>
+                <div class="col-sm-4 col-12 pt-sm-0 pt-3">
+                  <button type="button" class="btn btn-outline-success float-right col-12" ng-click='changeOperator("payback")'>Pay Back</button>
+                </div>
+              </div>
+
+              <div class="row pb-5">
+                <div class="col-sm-4 col-6 pt-2">
+                  <small class="float-left">Current Collateral Amount</small>
+                </div>
+                <div class="col-sm-4 col-6 pt-2">
+                  <small class="col text-sm-left text-right float-left">{{selectedLoan.currentCollateral}}<small class="ml-1">ETH</small></small>
+                </div>
+                <div class="col-sm-4 col-12 pt-sm-0 pt-3">
+                  <button type="button" class="btn btn-outline-success float-right col-12" ng-click='changeOperator("deposit")'>Increase Collateral</button>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-4 col-6 pt-2">
+                  <small class="float-left">Max Collateral to Withdraw<i class="far fa-question-circle ml-1" data-toggle="tooltip" data-placement="top" title="Tooltip on top"></i></small>
+                </div>
+                <div class="col-sm-4 col-6 pt-2">
+                  <small class="col text-sm-left text-right float-left">{{selectedLoan.maxCollateralToWithdraw}}<small class="ml-1">ETH</small></small>
+                </div>
+                <div class="col-sm-4 col-12 pt-sm-0 pt-3">
+                  <button type="button" class="btn btn-outline-success float-right col-12" ng-click='changeOperator("withdraw")'>Decrease Collateral</button>
+                </div>
+              </div>
+
+            </div>
+
+
+            
+          </div>
+
+          <div class="divider-line col-12 d-md-none"></div>
+
+        </div>
+
+      </div>
+
+
+      <div class="col-lg-3 col-12 right-column" ng-hide='operatorPanel.display'>
+
+        <div class="row lighter-row pb-4">
+          <div class="col-12 pt-md-3 pt-5">
+            <small>Address Account:</small>
+            <small class="col-12 font-weight-bold float-left text-left">{{defaultAccountAddress}}</small>
+          </div>
+        </div>
+
+          <div class="row pt-2" ng-show='currentPage.dashboard'>
+            <div class="col-lg-12 col-sm-6">
+              <select class="form-control form-control-sm loan-selection" ng-change='getCurrentLoanState()' ng-model='selectedLoan' ng-options='loan.loanId for loan in loansList'>
+              </select>
+            </div>
+            <div class="col-lg-12 col-sm-6 pt-lg-2 pt-2 pt-sm-0">
+              <button class="btn btn-outline-success col-12" ng-click='newLoan()'>New Loan<i class="fas fa-plus pl-4"></i></button>
+            </div>
+          </div>
+
+
+        <div class="row pt-4 pb-4">
+          <h3 class="pl-4">Price Info</h3>
+          <div class="col-12 pt-3">
+            <span class="col-4">ETH/ETD</span>
+            <span class="col-8 float-right text-right">{{ethToEtdProportion}}<label class="ml-1">ETD</label></span>
+          </div>
+          <div class="col-12 pt-3">
+            <span class="col-4">ETH/USD</span>
+            <span class="col-8 float-right text-right">{{etherPrice}}<label class="ml-1">USD</label></span>
+          </div>
+          <div class="col-12 pt-3">
+            <span class="col-4">ETD/USD</span>
+            <span class="col-8 float-right text-right">{{etdPrice}}<label class="ml-1">USD</label></span>
+          </div>
+        </div>
+
+        <div class="divider-line"></div>
+
+
+        <div class="row justify-content-center pt-5">
+          <u class="text-center terms">Terms of Service</u>
+        </div>
+
+      </div>
+
+      <div class="col-lg-3 col-12 operatorPanel" ng-show='operatorPanel.display'>
+
+        <div class="row justify-content-end pr-3 pt-2">
+          <button type="button" class="close" aria-label="Close" ng-click='cancelOperator()'>
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+
+        <div class="container-fluid deposit-panel" ng-show='operatorPanel.deposit'>
+          <div class="row pb-5">
+            <h3 class="col">Increase Collateral</h3>
+          </div>
+          <div class="row">
+            <p>How much ETH would you like to increase?</p>
+          </div>
+          <div class="row pb-4">
+            <div class="input-group">
+              <input type="number" step=".0001" class="form-control" min="0" aria-label="Amount (to the nearest dollar)" ng-model='increaseAmount' ng-change='limitaions("increase")'>
+              <div class="input-group-append">
+                <span class="input-group-text">ETH</span>
+                <span class="input-group-text">0.00</span>
+              </div>
+            </div>
+          </div>
+          <div class="alert alert-danger col-md-12 col-12" role="alert" ng-show='operatorAlert.increase'>
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+              </button>
+              <i class="fas fa-exclamation-triangle"></i>
+              <span class="ml-1">{{alertMessage}}</span>
+          </div>
+
+          <div class="row pt-3">
+            <small class="col-12">Your ETH balance</small>
+            <span class="col-12 text-dark font-weight-bold">{{ethAccountBalance}} ETH</span>
+          </div>
+          <div class="row pt-3">
+            <small class="col-12">Projected liquidation price(ETH/USD)</small>
+            <span class="col-12 text-dark font-weight-bold">{{projectedLiquidationPrice}} USD</span>
+          </div>
+          <div class="row pt-3">
+            <small class="col-12">Projected collateralization ratio</small>
+            <span class="col-12 text-success font-weight-bold">{{projectedRatio}} %</span>
+          </div>
+          <div class="row pt-5 mt-5 mb-0 pb-0">
+            <button type="button" class="btn btn-outline-secondary col mr-2" ng-click='cancelOperator()'>CANCEL</button>
+            <button type="button" class="btn btn-outline-success col" ng-click='increaseCollateral()' ng-disabled='operatorAlert.increase'>INCREASE</button>
+          </div>
+        </div>
+
+        <div class="container-fluid withdraw-panel" ng-show='operatorPanel.withdraw'>
+          <div class="row pb-5">
+            <h3 class="col">Decrease Collateral</h3>
+          </div>
+          <div class="row">
+            <p>How much ETH would you like to decrease?</p>
+          </div>
+          <div class="row pb-4">
+            <div class="input-group">
+              <input type="number" step=".0001" class="form-control" aria-label="Amount (to the nearest dollar)" ng-model='decreaseAmount' ng-change='limitaions("decrease")'>
+              <div class="input-group-append">
+                <span class="input-group-text">ETH</span>
+                <span class="input-group-text">0.00</span>
+              </div>
+            </div>
+            <small class="col text-right pr-0" ng-click='setMaxCollateralToWithdraw()'><u>Set Max</u></small>
+          </div>
+          <div class="alert alert-danger col-md-12 col-12" role="alert" ng-show='operatorAlert.decrease'>
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+              </button>
+              <i class="fas fa-exclamation-triangle"></i>
+              <span class="ml-1">{{alertMessage}}</span>
+          </div>
+          <div class="row pt-3">
+            <small class="col-12">Max available to withdraw</small>
+            <span class="col-12 text-dark font-weight-bold">{{selectedLoan.maxCollateralToWithdraw}} ETH</span>
+          </div>
+          <div class="row pt-3">
+            <small class="col-12">Projected liquidation price(ETH/USD)</small>
+            <span class="col-12 text-dark font-weight-bold">{{projectedLiquidationPrice}} USD</span>
+          </div>
+          <div class="row pt-3">
+            <small class="col-12">Projected collateralization ratio</small>
+            <span class="col-12 text-success font-weight-bold">{{projectedRatio}} %</span>
+          </div>
+          <div class="row pt-5 mt-5 mb-0 pb-0">
+            <button type="button" class="btn btn-outline-secondary col mr-2" ng-click='cancelOperator()'>CANCEL</button>
+            <button type="button" class="btn btn-outline-success col" ng-click='decreaseCollateral()' ng-disabled='operatorAlert.decrease'>DECREASE</button>
+          </div>
+        </div>
+
+        <div class="container-fluid payback-panel" ng-show='operatorPanel.payback'>
+          <div class="row pb-5">
+            <h3 class="col">Pay Back ETD</h3>
+          </div>
+          <div class="row">
+            <p>How much ETD would you like to pay back?</p>
+          </div>
+          <div class="row pb-4">
+            <div class="input-group">
+              <input type="number" class="form-control" aria-label="Amount (to the nearest dollar)" step=".01" ng-model='paybackAmount' ng-change='limitaions("payback")'>
+              <div class="input-group-append">
+                <span class="input-group-text pl-1 pr-1">ETD</span>
+                <span class="input-group-text pl-1 pr-1">0.00</span>
+              </div>
+            </div>
+            <small class="col text-right pr-0" ng-click='setMaxPaybackAmount()'><u>Settle Total Dept</u></small>
+          </div>
+          <div class="row container-fluid">
+            <div class="alert alert-danger col-md-12 col-12" role="alert" ng-show='operatorAlert.payback'>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+                </button>
+                <i class="fas fa-exclamation-triangle"></i>
+                <span class="ml-1">{{alertMessage}}</span>
+            </div>
+          </div>
+          <div class="row pt-3">
+            <small class="col-12">Current account balance</small>
+            <span class="col-12 text-dark font-weight-bold">{{etdAccountbalance}} ETD</span>
+          </div>
+          <div class="row pt-5 mt-5 mb-0 pb-0">
+            <button type="button" class="btn btn-outline-secondary col mr-2" ng-click='cancelOperator()'>CANCEL</button>
+            <button type="button" class="btn btn-outline-success col" ng-click='paybackLoan()' ng-disabled='operatorAlert.payback'>PAY BACK</button>
+          </div>
+
+        </div>
+
+      </div>
+
+    <!-- </div> -->
+    <!-- Main Col END -->
+    
+</div><!-- body-row END -->
