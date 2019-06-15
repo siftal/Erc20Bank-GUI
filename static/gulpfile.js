@@ -7,7 +7,7 @@ function handleError (error) {
 }
 
 gulp.task('heya', function() {
-    console.log('I live! Gulp is alive!');
+  console.log('I live! Gulp is alive!');
 });
 
 

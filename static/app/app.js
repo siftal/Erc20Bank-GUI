@@ -27,7 +27,7 @@
 
     $scope.collateralAmount;
     $scope.loanAmount;
-    $scope.ethAccountBalance;
+    $scope.collateralBalance;
     $scope.maxLoan;
     $scope.alertMessage;
     $scope.currentRatio;
@@ -114,27 +114,30 @@
 
     $scope.init = function() {
       web3.eth.defaultAccount = web3.eth.accounts[0];
-      $scope.etherBankAddress = '0x2cb144e31f37e7a31d6fb54881b2958aa263b6df';
-      var etherBankInstance = web3.eth.contract(etherBankAbi);
-      $scope.etherBankContract = etherBankInstance.at($scope.etherBankAddress);
+      $scope.erc20BankAddress = erc20BankAddress;
+      var erc20BankInstance = web3.eth.contract(erc20BankAbi);
+      $scope.erc20BankContract = erc20BankInstance.at($scope.erc20BankAddress);
 
-      var etherDollarkAddress = '0xe11bbC8306afD3e2DB1a91E2edE6cFb44efbFc61';
+      var collateralInstance = web3.eth.contract(collateralAbi);
+      $scope.collateralContract = collateralInstance.at(collateralAddress);
+
       var etherDollarInstance = web3.eth.contract(etherDollarAbi);
       $scope.etherDollarContract = etherDollarInstance.at(etherDollarkAddress);
       $scope.getLoans();
       $scope.defaultAccountAddress = web3.eth.defaultAccount.slice(0, 15) + ' ... ' + web3.eth.defaultAccount.slice(-15);
 
-      $scope.etherBankContract.etherPrice(function(error, result) {
+      $scope.erc20BankContract.collateralPrice(function(error, result) {
         if (error) {
           console.log(error);
         } else {
-          $scope.etherPrice = result.c[0] / 100;
-          $scope.ethToEtdProportion = $scope.etherPrice / $scope.etdPrice;
+          $scope.collateralPrice = result.c[0] / 10 ** 4;
+          $scope.ethToEtdProportion = $scope.collateralPrice / $scope.
+          etdPrice;
           $scope.$applyAsync();
         }
       });
 
-      $scope.etherBankContract.collateralRatio(function(error, result) {
+      $scope.erc20BankContract.collateralRatio(function(error, result) {
         if (error) {
           console.log(error);
         } else {
@@ -143,11 +146,21 @@
         }
       });
 
-      web3.eth.getBalance(web3.eth.defaultAccount, function(error, result) {
-        if (result) {
-          $scope.ethAccountBalance = result.c[0] / 10 ** 4;
-        } else {
+      $scope.erc20BankContract.collateralPrice(function(error, result) {
+        if (error) {
           console.log(error);
+        } else {
+          $scope.collateralPrice = result.c[0] / 10 ** 4;
+          $scope.ethToEtdProportion = $scope.collateralPrice / $scope.etdPrice;
+          $scope.$applyAsync();
+        }
+      });
+
+      $scope.collateralContract.balanceOf(web3.eth.defaultAccount, function(error, result) {
+        if (error) {
+          console.log(error);
+        } else {
+          $scope.collateralBalance = result.c[0] / 10 ** 4;
         }
       });
 
@@ -165,21 +178,21 @@
         $scope.liquidationPrice = $scope.liquidationPrice.toFixed(2);
       }
 
-      $scope.maxLoan = $scope.collateralAmount * $scope.etherPrice / $scope.minRatio / $scope.etdPrice;
+      $scope.maxLoan = $scope.collateralAmount * $scope.collateralPrice / $scope.minRatio / $scope.etdPrice;
       if ($scope.maxLoan) {
         $scope.maxLoan = $scope.maxLoan.toFixed(2);
       }
       $scope.showAlert = false;
 
-      if ($scope.collateralAmount > $scope.ethAccountBalance) {
-        $scope.alertMessage = 'Exceeds the ETH in your account';
+      if ($scope.collateralAmount > $scope.collateralBalance) {
+        $scope.alertMessage = 'Exceeds the collateral in your account';
         $scope.showAlert = true;
       }
 
-      $scope.currentRatio = $scope.collateralAmount * $scope.etherPrice / $scope.loanAmount / $scope.etdPrice;
+      $scope.currentRatio = $scope.collateralAmount * $scope.collateralPrice / $scope.loanAmount / $scope.etdPrice;
 
       if ($scope.currentRatio < $scope.minRatio) {
-        $scope.alertMessage = 'Insufficient ETH for the Requested Loan';
+        $scope.alertMessage = 'Insufficient collateral for the Requested Loan';
         $scope.showAlert = true;
       }
 
@@ -188,8 +201,7 @@
         $scope.currentRatio = $scope.currentRatio.toFixed(2);
       }
 
-      if (!$scope.loanAmount || !$scope.collateralAmount || $scope.currentRatio === Infinity
-          || $scope.currentRatio === -Infinity) {
+      if (!$scope.loanAmount || !$scope.collateralAmount || $scope.currentRatio === Infinity || $scope.currentRatio === -Infinity) {
             $scope.deactiveGetLoan = true;
       }
 
@@ -197,15 +209,15 @@
 
     $scope.getCurrentLoanState = function() {
       $scope.getEtdBalance();
-      $scope.etherBankContract.loans.call($scope.selectedLoan.loanId, {
+      $scope.erc20BankContract.loans.call($scope.selectedLoan.loanId, {
         from: web3.eth.defaultAccount
       }, function(error, result) {
         if (result) {
           var loanState = result[3].c[0];
           var currentCollateral = result[1].c[0] / 10 ** 4;
-          var remainingDebt = result[2].c[0] / 10 ** 2;
+          var remainingDebt = result[2].c[0] / 10 ** 4;
           var liquidationPrice = $scope.minRatio * remainingDebt / currentCollateral;
-          var collateralRatio = currentCollateral * $scope.etherPrice / remainingDebt / $scope.etdPrice;
+          var collateralRatio = currentCollateral * $scope.collateralPrice / remainingDebt / $scope.etdPrice;
           var securityMargin = .0001; // It's for rounding the decimals to keep ratio upper than minimum.
           if (loanState == 3) {
             securityMargin = 0;
@@ -213,15 +225,17 @@
             liquidationPrice = 0;
           }
           if (loanState == 0) {
-            loanState = 'Active';
+            loanState = 'Undefined';
           } else if (loanState == 1) {
-            loanState = 'Under Liquidation';
+            loanState = 'Active';
           } else if (loanState == 2) {
-            loanState = 'Liquidated';
+            loanState = 'Under Liquidation';
           } else if (loanState == 3) {
+            loanState = 'Liquidated';
+          } else if (loanState == 4) {
             loanState = 'Settled';
           }
-          var maxCollateralToWithdraw = $scope.minRatio * remainingDebt * $scope.etdPrice / $scope.etherPrice;
+          var maxCollateralToWithdraw = $scope.minRatio * remainingDebt * $scope.etdPrice / $scope.collateralPrice;
           maxCollateralToWithdraw = currentCollateral - (maxCollateralToWithdraw + securityMargin);
           remainingDebt = remainingDebt.toFixed(2);
           currentCollateral = currentCollateral.toFixed(4);
@@ -243,7 +257,7 @@
 
     $scope.getLoans = function() {
       $scope.loansList = [];
-      var loansGot = $scope.etherBankContract.LoanGot({
+      var loansGot = $scope.erc20BankContract.LoanGot({
         recipient: web3.eth.defaultAccount
       }, {
         fromBlock: 0,
@@ -280,7 +294,6 @@
       $anchorScroll('body-row');
     };
 
-
     $scope.loanOrderConfirmation = function() {
 
       var checkTransactionResult = function(hashString, waitingMessage) {
@@ -315,18 +328,62 @@
         });
       };
 
-      $scope.etherBankContract.getLoan.sendTransaction($scope.loanAmount * 100, {
-        value: web3.toWei($scope.collateralAmount, "ether"),
-        sender: web3.eth.defaultAccount
-      }, function(error, result) {
-        if (error) {
-          console.log(error);
-        } else {
-          var hashString = result;
-          var waitingMessage = 'Please wait!';
-          checkTransactionResult(hashString, waitingMessage);
-        }
-      });
+      var sendGetLoanTransaction = function(){
+        $scope.erc20BankContract.getLoan.sendTransaction($scope.loanAmount * 10**18, {
+          value: 0,
+          sender: web3.eth.defaultAccount
+        }, function(error, result) {
+          if (error) {
+            console.log(error);
+          } else {
+            var hashString = result;
+            var waitingMessage = 'Please wait!';
+            checkTransactionResult(hashString, waitingMessage);
+          }
+        });
+      };
+
+      var checkApproveResult = function(hashString) {
+        web3.eth.getTransactionReceipt(hashString, function(error, result) {
+          if (error) {
+            console.log(error);
+          } else {
+            if (result == null) {
+              if (waiting.isActive == false) {
+                waiting.start('Please wait. We are approving your request!');
+                waiting.isActive = true;
+              }
+              $timeout(function() {
+                checkApproveResult(hashString);
+              }, 5000);
+            } else {
+              if (result.status == '0x1') {
+                waiting.stop();
+                waiting.isActive = false;
+                sendGetLoanTransaction();
+              }
+            }
+          }
+        })
+      };
+
+      var sendApproveTransaction = function() {
+        $scope.collateralContract.approve.sendTransaction($scope.erc20BankAddress, $scope.collateralAmount * 10**18, {
+            value: 0,
+            sender: web3.eth.defaultAccount
+          },
+          function(error, result) {
+            if (result) {
+              var hashString = result;
+              checkApproveResult(hashString);
+            } else {
+              console.log(error);
+            }
+          });
+      };
+
+      sendApproveTransaction();
+
     };
 
     $scope.backPage = function() {
@@ -384,7 +441,7 @@
       }
       $scope.projectedLiquidationPrice = $scope.minRatio * $scope.selectedLoan.remainingDebt /
         projectedCollateral;
-      $scope.projectedRatio = projectedCollateral * $scope.etherPrice / $scope.selectedLoan.remainingDebt /
+      $scope.projectedRatio = projectedCollateral * $scope.collateralPrice / $scope.selectedLoan.remainingDebt /
         $scope.etdPrice;
       $scope.projectedLiquidationPrice = $scope.projectedLiquidationPrice.toFixed(2);
       $scope.projectedRatio = ($scope.projectedRatio * 100).toFixed(2);
@@ -401,7 +458,7 @@
         $scope.operatorAlert.payback = false;
       }
 
-      if ($scope.increaseAmount > $scope.ethAccountBalance) {
+      if ($scope.increaseAmount > $scope.collateralBalance) {
         $scope.operatorAlert.increase = true;
         $scope.alertMessage = 'Exceeds ETH in your account';
       } else if ($scope.increaseAmount < 0) {
@@ -436,7 +493,7 @@
 
     $scope.paybackLoan = function() {
 
-      var checkSettleLonResult = function(hashString) {
+      var checkSettleLoanResult = function(hashString) {
         web3.eth.getTransactionReceipt(hashString, function(error, result) {
           if (error) {
             console.log(error);
@@ -447,7 +504,7 @@
                 waiting.isActive = true;
               }
               $timeout(function() {
-                checkSettleLonResult(hashString);
+                checkSettleLoanResult(hashString);
               });
             } else {
               if (result.status == '0x1') {
@@ -487,15 +544,14 @@
       };
 
       var sendSettleLoanTransaction = function() {
-        $scope.etherBankContract.settleLoan.sendTransaction($scope.selectedLoan.loanId, $scope.paybackAmount *
-          100, {
+        $scope.erc20BankContract.settleLoan.sendTransaction($scope.selectedLoan.loanId, $scope.paybackAmount * 10**18, {
             value: 0,
             sender: web3.eth.defaultAccount
           },
           function(error, result) {
             if (result) {
               var hashString = result;
-              checkSettleLonResult(hashString);
+              checkSettleLoanResult(hashString);
             } else {
               console.log(error);
             }
@@ -503,8 +559,7 @@
       };
 
       var sendApproveTransaction = function() {
-        $scope.etherDollarContract.approve.sendTransaction($scope.etherBankAddress, $scope.paybackAmount *
-          100, {
+        $scope.etherDollarContract.approve.sendTransaction($scope.erc20BankAddress, $scope.paybackAmount * 10**18, {
             value: 0,
             sender: web3.eth.defaultAccount
           },
@@ -549,18 +604,62 @@
     };
 
     $scope.increaseCollateral = function() {
-      $scope.etherBankContract.increaseCollateral.sendTransaction($scope.selectedLoan.loanId, {
-        value: web3.toWei($scope.increaseAmount, "ether"),
-        sender: web3.eth.defaultAccount
-      }, function(error, result) {
-        if (result) {
-          var hashString = result;
-          var waitingMessage = 'We are increasing your collateral, Please wait!';
-          checkTransactionResult(hashString, waitingMessage);
-        } else {
-          console.log(error);
-        }
-      });
+
+      var senIncreaseTransaction = function(){
+        $scope.erc20BankContract.increaseCollateral.sendTransaction($scope.selectedLoan.loanId, {
+          value: 0,
+          sender: web3.eth.defaultAccount
+        }, function(error, result) {
+          if (result) {
+            var hashString = result;
+            var waitingMessage = 'We are increasing your collateral, Please wait!';
+            checkTransactionResult(hashString, waitingMessage);
+          } else {
+            console.log(error);
+          }
+        });
+      }
+
+      var checkApproveResult = function(hashString) {
+        web3.eth.getTransactionReceipt(hashString, function(error, result) {
+          if (error) {
+            console.log(error);
+          } else {
+            if (result == null) {
+              if (waiting.isActive == false) {
+                waiting.start('Please wait. We are approving your request!');
+                waiting.isActive = true;
+              }
+              $timeout(function() {
+                checkApproveResult(hashString);
+              }, 5000);
+            } else {
+              if (result.status == '0x1') {
+                waiting.stop();
+                waiting.isActive = false;
+                senIncreaseTransaction();
+              }
+            }
+          }
+        })
+      };
+
+      var approveIncrease = function() {
+        $scope.collateralContract.approve.sendTransaction($scope.erc20BankAddress, $scope.increaseAmount * 10**18, {
+          value: 0,
+          sender: web3.eth.defaultAccount
+        }, function(error, result) {
+          if (result) {
+            var hashString = result;
+            checkApproveResult(hashString);
+          } else {
+            console.log(error);
+          }
+        });
+      };
+
+      approveIncrease();
+
     };
 
     $scope.decreaseCollateral = function() {
@@ -592,8 +691,7 @@
       };
 
       var decreaseTransaction = function() {
-        $scope.etherBankContract.decreaseCollateral.sendTransaction($scope.selectedLoan.loanId, web3.toWei(
-          $scope.decreaseAmount, "ether"), {
+        $scope.erc20BankContract.decreaseCollateral.sendTransaction($scope.selectedLoan.loanId, $scope.decreaseAmount * 10**18, {
           sender: web3.eth.defaultAccount
         }, function(error, result) {
           if (result) {
@@ -605,46 +703,7 @@
         });
       };
 
-      var checkApproveResult = function(hashString) {
-        web3.eth.getTransactionReceipt(hashString, function(error, result) {
-          if (error) {
-            console.log(error);
-          } else {
-            if (result == null) {
-              if (waiting.isActive == false) {
-                waiting.start('Please wait. We are approving your request!');
-                waiting.isActive = true;
-              }
-              $timeout(function() {
-                checkApproveResult(hashString);
-              }, 5000);
-            } else {
-              if (result.status == '0x1') {
-                waiting.stop();
-                waiting.isActive = false;
-                decreaseTransaction();
-              }
-            }
-          }
-        })
-      };
-
-      var approveDecrease = function() {
-        $scope.etherDollarContract.decreaseApproval.sendTransaction($scope.etherBankAddress, web3.toWei(
-          $scope.decreaseAmount, "ether"), {
-          value: 0,
-          sender: web3.eth.defaultAccount
-        }, function(error, result) {
-          if (result) {
-            var hashString = result;
-            checkApproveResult(hashString);
-          } else {
-            console.log(error);
-          }
-        });
-      };
-
-      approveDecrease();
+      decreaseTransaction();
     };
 
     $scope.getEtdBalance = function() {
@@ -652,7 +711,7 @@
         if (error) {
           console.log(error);
         } else {
-          $scope.etdAccountbalance = result.c[0] / 10 ** 2;
+          $scope.etdAccountbalance = result.c[0] / 10 ** 4;
         }
       });
     };

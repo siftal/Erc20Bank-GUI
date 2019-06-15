@@ -14,7 +14,6 @@
       <li class="nav-item">
         <a class="nav-link" href="#">Help</a><i class="fas fa-question"></i>
       </li>
-      
     </ul>
   </div>
 </nav><!-- NavBar END -->
@@ -83,9 +82,9 @@
               <label for="collaterallInput" class="input-group">Collateral</label>
               <input type="number" class="form-control" step=".0001" placeholder="Amount of Collateral to Lock" id="collaterallInput" ng-model='collateralAmount' ng-change='getLoanLimitation()'>
               <div class="input-group-append" style="display: inline-table;">
-                <span class="input-group-text">ETH</span>
+                <span class="input-group-text">BDT</span>
               </div>
-              <label for="collaterallInput" class="input-group mt-1" style="direction: rtl;">Your Account Balance: {{ethAccountBalance}} ETH</label>
+              <label for="collaterallInput" class="input-group mt-1" style="direction: rtl;">Your Account Balance: {{ethAccountBalance}} BDT</label>
             </div>
             <div class="col-md-6 col-12 input-group">
               <label for="etdInput" class="input-group">Loan</label>
@@ -110,12 +109,12 @@
           <div class="row container-fluid">
             <div class="col-md-6 col-12 pt-4 pb-4 left-description-box">
               <div class="row  mb-3">
-                <small class="float-left col-md-8">Liquidation Price (ETH/USD)<i class="far fa-question-circle ml-1" data-toggle="tooltip" data-placement="top" title="The price of Ether at wich your loan will be put to liquidation and your collateral ETH will be sold in an auction."></i></small>
+                <small class="float-left col-md-8">Liquidation Price (BDT/USD)<i class="far fa-question-circle ml-1" data-toggle="tooltip" data-placement="top" title="The price of Ether at wich your loan will be put to liquidation and your collateral BDT will be sold in an auction."></i></small>
                 <small class="float-right col-md-4 text-right" ng-show='!isNan(liquidationPrice)'>{{liquidationPrice}} USD</small>
                 <small class="float-right col-md-4 text-right" ng-show='isNan(liquidationPrice)'>-- USD</small>
               </div>
               <div class="row mb-1">
-                <small class="float-left col-md-8">Current ETH Price</small>
+                <small class="float-left col-md-8">Current BDT Price</small>
                 <small class="float-right col-md-4 text-right">{{etherPrice}} USD</small>
               </div>
             </div>
@@ -151,7 +150,7 @@
             <div class="col-md-6 col-12 pt-4 pb-4 left-description-box">
               <div class="row">
                 <small class="float-left col-md-8 col-6">Collateral Amount:</small>
-                <small class="float-right col-md-4 col-6 text-right">{{collateralAmount}} ETH</small>
+                <small class="float-right col-md-4 col-6 text-right">{{collateralAmount}} BDT</small>
               </div>
             </div>
             <div class="col-md-6 pt-4 pb-4 right-description-box">
@@ -163,7 +162,7 @@
           </div>
 
           <div class="container-fluid row">
-            
+
            <div class="divider-line col-12 d-md-none"></div>
           </div>
 
@@ -203,7 +202,7 @@
                 <small class="float-right col-4 text-right">{{minRatio*100}} %</small>
               </div>
               <div class="row pb-2">
-                <small class="float-left col-8">Liquidation Price (ETH/USD)<i class="far fa-question-circle ml-1" data-toggle="tooltip" data-placement="top" title="Tooltip on top"></i></small>
+                <small class="float-left col-8">Liquidation Price (BDT/USD)<i class="far fa-question-circle ml-1" data-toggle="tooltip" data-placement="top" title="Tooltip on top"></i></small>
                 <small class="float-right col-4 text-right">{{selectedLoan.liquidationPrice}}</small>
               </div>
               <div class="row pb-3">
@@ -236,7 +235,7 @@
                   <small class="float-left">Current Collateral Amount</small>
                 </div>
                 <div class="col-sm-4 col-6 pt-2">
-                  <small class="col text-sm-left text-right float-left">{{selectedLoan.currentCollateral}}<small class="ml-1">ETH</small></small>
+                  <small class="col text-sm-left text-right float-left">{{selectedLoan.currentCollateral}}<small class="ml-1">BDT</small></small>
                 </div>
                 <div class="col-sm-4 col-12 pt-sm-0 pt-3">
                   <button type="button" class="btn btn-outline-success float-right col-12" ng-click='changeOperator("deposit")'>Increase Collateral</button>
@@ -247,7 +246,7 @@
                   <small class="float-left">Max Collateral to Withdraw<i class="far fa-question-circle ml-1" data-toggle="tooltip" data-placement="top" title="Tooltip on top"></i></small>
                 </div>
                 <div class="col-sm-4 col-6 pt-2">
-                  <small class="col text-sm-left text-right float-left">{{selectedLoan.maxCollateralToWithdraw}}<small class="ml-1">ETH</small></small>
+                  <small class="col text-sm-left text-right float-left">{{selectedLoan.maxCollateralToWithdraw}}<small class="ml-1">BDT</small></small>
                 </div>
                 <div class="col-sm-4 col-12 pt-sm-0 pt-3">
                   <button type="button" class="btn btn-outline-success float-right col-12" ng-click='changeOperator("withdraw")'>Decrease Collateral</button>
@@ -290,12 +289,12 @@
         <div class="row pt-4 pb-4">
           <h3 class="pl-4">Price Info</h3>
           <div class="col-12 pt-3">
-            <span class="col-4">ETH/ETD</span>
+            <span class="col-4">BDT/ETD</span>
             <span class="col-8 float-right text-right">{{ethToEtdProportion}}<label class="ml-1">ETD</label></span>
           </div>
           <div class="col-12 pt-3">
-            <span class="col-4">ETH/USD</span>
-            <span class="col-8 float-right text-right">{{etherPrice}}<label class="ml-1">USD</label></span>
+            <span class="col-4">BDT/USD</span>
+            <span class="col-8 float-right text-right">{{collateralPrice}}<label class="ml-1">USD</label></span>
           </div>
           <div class="col-12 pt-3">
             <span class="col-4">ETD/USD</span>
@@ -325,13 +324,13 @@
             <h3 class="col">Increase Collateral</h3>
           </div>
           <div class="row">
-            <p>How much ETH would you like to increase?</p>
+            <p>How much BDT would you like to increase?</p>
           </div>
           <div class="row pb-4">
             <div class="input-group">
               <input type="number" step=".0001" class="form-control" min="0" aria-label="Amount (to the nearest dollar)" ng-model='increaseAmount' ng-change='limitaions("increase")'>
               <div class="input-group-append">
-                <span class="input-group-text">ETH</span>
+                <span class="input-group-text">BDT</span>
                 <span class="input-group-text">0.00</span>
               </div>
             </div>
@@ -345,11 +344,11 @@
           </div>
 
           <div class="row pt-3">
-            <small class="col-12">Your ETH balance</small>
-            <span class="col-12 text-dark font-weight-bold">{{ethAccountBalance}} ETH</span>
+            <small class="col-12">Your BDT balance</small>
+            <span class="col-12 text-dark font-weight-bold">{{ethAccountBalance}} BDT</span>
           </div>
           <div class="row pt-3">
-            <small class="col-12">Projected liquidation price(ETH/USD)</small>
+            <small class="col-12">Projected liquidation price(BDT/USD)</small>
             <span class="col-12 text-dark font-weight-bold">{{projectedLiquidationPrice}} USD</span>
           </div>
           <div class="row pt-3">
@@ -367,13 +366,13 @@
             <h3 class="col">Decrease Collateral</h3>
           </div>
           <div class="row">
-            <p>How much ETH would you like to decrease?</p>
+            <p>How much BDT would you like to decrease?</p>
           </div>
           <div class="row pb-4">
             <div class="input-group">
               <input type="number" step=".0001" class="form-control" aria-label="Amount (to the nearest dollar)" ng-model='decreaseAmount' ng-change='limitaions("decrease")'>
               <div class="input-group-append">
-                <span class="input-group-text">ETH</span>
+                <span class="input-group-text">BDT</span>
                 <span class="input-group-text">0.00</span>
               </div>
             </div>
@@ -388,10 +387,10 @@
           </div>
           <div class="row pt-3">
             <small class="col-12">Max available to withdraw</small>
-            <span class="col-12 text-dark font-weight-bold">{{selectedLoan.maxCollateralToWithdraw}} ETH</span>
+            <span class="col-12 text-dark font-weight-bold">{{selectedLoan.maxCollateralToWithdraw}} BDT</span>
           </div>
           <div class="row pt-3">
-            <small class="col-12">Projected liquidation price(ETH/USD)</small>
+            <small class="col-12">Projected liquidation price(BDT/USD)</small>
             <span class="col-12 text-dark font-weight-bold">{{projectedLiquidationPrice}} USD</span>
           </div>
           <div class="row pt-3">
